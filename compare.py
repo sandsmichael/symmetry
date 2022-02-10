@@ -7,10 +7,18 @@ class Compare:
 
         self.objx = objx
         self.objy = objy
-
-        print(type(self.objx), type(self.objy))
         
         assert(type(self.objx) == type(self.objy))
+
+        assert (self.objx.columns == self.objy.columns).all(), \
+            "DataFrame column names are different"
+
+        if any(self.objx.dtypes != self.objy.dtypes):
+            "Data Types are different, trying to convert"
+            self.objy = self.objy.astype(self.objx.dtypes)
+
+        if self.objx.equals(self.objy):
+            return None
 
         # if isinstance(self.objx, pd.DataFrame) & isinstance(self.objy, pd.DataFrame):
         #     CompareFrames(self.objx, self.objy)
@@ -18,25 +26,19 @@ class Compare:
         # if isinstance(self.objx, pd.Series) & isinstance(self.objy, pd.Series):
         #     CompareSeries(self.objx, self.objy)
 
-            
-
-    def numerical_differences(self):
-        """compare two frames of the same rxc structure and labels to report any numerical differences
-        """
-        return self.objx - self.objy
-
-    def redact_valid():
-        """redact valid values with '--' and populate only incorrect values based on param
+        
+    def redact():
+        """redact valid values with '--' and leave only NaN or "" visible
         """
         pass
 
     def nans(self, ax):
         return self.objx[self.objx.isnull().any(axis=ax)]
 
-    def compare_values(self):
+    def values(self):
         return self.objx.compare(self.objy, keep_equal=False)
 
-    def compare_shape(self):
+    def shape(self):
         return self.objx.compare(self.objy, keep_shape=True)
 
     def from_to(self):
@@ -47,3 +49,16 @@ class Compare:
         changed_from = self.objx.values[difference_locations]
         changed_to = self.objy.values[difference_locations]
         return pd.DataFrame({'from': changed_from, 'to': changed_to}, index=changed.index)
+
+
+    def highlight_diff(data, color='yellow'):
+        attr = 'background-color: {}'.format(color)
+        other = data.xs('First', axis='columns', level=-1)
+        return pd.DataFrame(np.where(data.ne(other, level=0), attr, ''),
+                            index=data.index, columns=data.columns)
+
+    def side_by_side(self):
+        df = pd.concat([self.objx.set_index('id'), self.objx.set_index('id')], axis='columns', keys=['1', '2'])
+        df = df.swaplevel(axis='columns')[df.columns[1:]]
+        return df.style.apply(self.highlight_diff, axis=None)
+
