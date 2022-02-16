@@ -2,8 +2,24 @@ import pandas as pd
 import numpy as np
 
 class Compare:
+    """[Summary]
 
-    def __init__(self, objx, objy):
+    :param [ParamName]: [ParamDescription], defaults to [DefaultParamVal]
+    :type [ParamName]: [ParamType](, optional)
+    ...
+    :raises [ErrorType]: [ErrorDescription]
+    ...
+    :return: [ReturnDescription]
+    :rtype: [ReturnType]
+
+
+    Examples:
+    
+    """ 
+
+
+
+    def __init__(self, objx=None, objy=None):
 
         self.objx = objx
         self.objy = objy
@@ -20,6 +36,17 @@ class Compare:
         if self.objx.equals(self.objy):
             return None
 
+        if self.objx.shape != self.objy.shape:
+            print("DataFrame shapes are different")
+            return None
+        
+        if isinstance(self.objx.index, pd.RangeIndex):
+            return None
+
+        if self.objx.index.dtype != self.objy.index.dtype:
+            print("DataFrame index dtypes are different")
+            return None
+
         # if isinstance(self.objx, pd.DataFrame) & isinstance(self.objy, pd.DataFrame):
         #     CompareFrames(self.objx, self.objy)
 
@@ -32,8 +59,8 @@ class Compare:
         """
         pass
 
-    def nans(self, ax):
-        return self.objx[self.objx.isnull().any(axis=ax)]
+    def nans(self, ax=1):
+        return self.objx[self.objx.isnull().any(axis=ax)].style.background_gradient(cmap='RdYlGn', axis=ax)
 
     def values(self):
         return self.objx.compare(self.objy, keep_equal=False)
