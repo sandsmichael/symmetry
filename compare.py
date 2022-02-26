@@ -17,41 +17,43 @@ class Compare:
     
     """ 
 
+    def __init__(self, objx:pd.DataFrame=None, objy:pd.DataFrame=None):
+        """Takes two objects of the shape, types and size and compares them for differeences
 
+        :param objx: [ParamDescription], defaults to [DefaultParamVal]
+        :param objy: [ParamDescription], defaults to [DefaultParamVal]
 
-    def __init__(self, objx=None, objy=None):
+        ...
+        :raises [ErrorType]: [ErrorDescription]
+        ...
+        :return: a dataframe showing the differences or changes between the two objects
+        :rtype: pd.DataFrame
+        """
 
         self.objx = objx
         self.objy = objy
         
-        assert(type(self.objx) == type(self.objy))
+        assert(type(self.objx) == type(self.objy)), \
+            "[ERROR] Objects do not have the same type"
 
         assert (self.objx.columns == self.objy.columns).all(), \
-            "DataFrame column names are different"
+            "[ERROR] DataFrame column names are different"
+        
+        assert(self.objx.shape != self.objy.shape), \
+            print('[ERROR] DataFrame shapes are not the same')
 
         if any(self.objx.dtypes != self.objy.dtypes):
             "Data Types are different, trying to convert"
-            self.objy = self.objy.astype(self.objx.dtypes)
-
-        if self.objx.equals(self.objy):
-            return None
-
-        if self.objx.shape != self.objy.shape:
-            print("DataFrame shapes are different")
-            return None
-        
-        if isinstance(self.objx.index, pd.RangeIndex):
-            return None
+            try:
+                self.objy = self.objy.astype(self.objx.dtypes)
+            except:
+                '[ERROR] Unable to convert data types'
 
         if self.objx.index.dtype != self.objy.index.dtype:
-            print("DataFrame index dtypes are different")
+            print("[ERROR] DataFrame index dtypes are different")
+        
+        if self.objx.equals(self.objy):
             return None
-
-        # if isinstance(self.objx, pd.DataFrame) & isinstance(self.objy, pd.DataFrame):
-        #     CompareFrames(self.objx, self.objy)
-
-        # if isinstance(self.objx, pd.Series) & isinstance(self.objy, pd.Series):
-        #     CompareSeries(self.objx, self.objy)
 
         
     def redact():
@@ -60,9 +62,7 @@ class Compare:
         pass
 
     def nans(self, ax=1):
-        '''
-        show any nan values in the dataframe
-        '''
+        ''' show any nan values in the dataframe '''
         return self.objx[self.objx.isnull().any(axis=ax)].style.background_gradient(cmap='RdYlGn', axis=ax)
 
     def values(self):
@@ -72,7 +72,7 @@ class Compare:
         return self.objx.compare(self.objy, keep_shape=True)
 
     def align(self):
-        df1.compare(df2, align_axis='rows')
+        self.objx.compare(self.objy, align_axis='rows')
 
     def equality(self):
         return self.objx.equals(self.objy)
@@ -130,10 +130,10 @@ class Compare:
         df = df.swaplevel(axis='columns')#[df.columns[1:]]
         return df#df.style.apply(self.highlight_diff, axis=None)
 
-    def dataframe_difference(df1: DataFrame, df2: DataFrame, which=None):
+    def dataframe_difference(self, which=None):
         """Find rows which are different between two DataFrames."""
-        comparison_df = df1.merge(
-            df2,
+        comparison_df = self.objx.merge(
+            self.objy,
             indicator=True,
             how='outer'
         )

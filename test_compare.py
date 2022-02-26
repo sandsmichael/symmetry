@@ -11,9 +11,9 @@ import pandas as pd
 '''
 '''
 def test_funcs():
-    funcs = ['nans']
+    funcs = ['nans','values','shape', 'from_to', 'side_by_side']
     for func in funcs:
-        print(f'****************************** {func} ******************************')
+        # print(f"****************************** {func} ******************************")
         an_object = Compare(dfx, dfy)
         class_method = getattr(Compare, func)
         result = class_method(an_object)
@@ -24,4 +24,4 @@ dfx = pd.read_csv('./dummy/data1.csv')
 dfy = pd.read_csv('./dummy/data2.csv')
 cpare = Compare(dfx, dfy)
 print(cpare.objx)
-cpare.nans()
+cpare.align()
