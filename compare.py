@@ -60,6 +60,9 @@ class Compare:
         pass
 
     def nans(self, ax=1):
+        '''
+        show any nan values in the dataframe
+        '''
         return self.objx[self.objx.isnull().any(axis=ax)].style.background_gradient(cmap='RdYlGn', axis=ax)
 
     def values(self):
@@ -67,6 +70,44 @@ class Compare:
 
     def shape(self):
         return self.objx.compare(self.objy, keep_shape=True)
+
+    def align(self):
+        df1.compare(df2, align_axis='rows')
+
+    def equality(self):
+        return self.objx.equals(self.objy)
+
+    def common_rows(self):
+        df = df1.merge(df2, how = 'inner' ,indicator=False)
+
+    def common_rows2(self):
+        df = pd.concat([df1, df2])
+  
+        df = df.reset_index(drop=True)
+        
+        df_group = df.groupby(list(df.columns))
+        
+        idx = [x[0] for x in df_group.groups.values() if len(x) > 1]
+        df.reindex(idx)
+
+    def conditional_compare(self):
+        df1['prices_match'] = np.where(df1['price_1'] == df2['price_2'], 'True', 'False')
+
+    
+    def different_values_in_same_column(self):
+        set(df1.Temp).symmetric_difference(df2.Temp)
+
+    def in_left_not_right(self):
+        df = df1.merge(df2, how = 'outer' ,indicator=True).loc[lambda x : x['_merge']=='left_only']
+
+    def in_right_not_left(self):
+        df = df1.merge(df2, how = 'outer' ,indicator=True).loc[lambda x : x['_merge']=='right_only']
+
+
+    def not_duplicates(self):
+        pd.concat([df1,df2]).drop_duplicates(keep=False)
+
+
 
     def from_to(self):
         ne_stacked = (self.objx != self.objy).stack()
@@ -84,8 +125,21 @@ class Compare:
         return pd.DataFrame(np.where(data.ne(other, level=0), attr, ''),
                             index=data.index, columns=data.columns)
 
-    def side_by_side(self):
-        df = pd.concat([self.objx.set_index('id'), self.objx.set_index('id')], axis='columns', keys=['1', '2'])
-        df = df.swaplevel(axis='columns')[df.columns[1:]]
-        return df.style.apply(self.highlight_diff, axis=None)
+    def side_by_side(self, ix):
+        df = pd.concat([self.objx.set_index(ix), self.objx.set_index(ix)], axis='columns', keys=['col1', 'col2'])
+        df = df.swaplevel(axis='columns')#[df.columns[1:]]
+        return df#df.style.apply(self.highlight_diff, axis=None)
 
+    def dataframe_difference(df1: DataFrame, df2: DataFrame, which=None):
+        """Find rows which are different between two DataFrames."""
+        comparison_df = df1.merge(
+            df2,
+            indicator=True,
+            how='outer'
+        )
+        if which is None:
+            diff_df = comparison_df[comparison_df['_merge'] != 'both']
+        else:
+            diff_df = comparison_df[comparison_df['_merge'] == which]
+        diff_df.to_csv('data/diff.csv')
+        return diff_df
